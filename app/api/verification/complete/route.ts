@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabaseServer } from "@/lib/supabase-server"
+import { supabase } from "@/lib/supabase"
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update verification session
-    const { data: session, error: sessionError } = await supabaseServer
+    const { data: session, error: sessionError } = await supabase
       .from("verification_sessions")
       .update({
         status: success ? "completed" : "failed",
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // If verification was successful, update user verification status
     if (success && session) {
-      const { error: userError } = await supabaseServer
+      const { error: userError } = await supabase
         .from("users")
         .update({ verification_status: "verified" })
         .eq("id", session.user_id)

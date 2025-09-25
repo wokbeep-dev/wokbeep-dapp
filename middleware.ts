@@ -37,6 +37,9 @@ function checkRateLimit(ip: string, limit = 100, windowMs = 15 * 60 * 1000): boo
 }
 
 export async function middleware(req: NextRequest) {
+  if (req.nextUrl.pathname.startsWith("/api/auth")) {
+    return NextResponse.next()
+  }
   // Your original IP tracking logic (enhanced)
   const ip = getClientIP(req)
   const res = NextResponse.next()
@@ -60,11 +63,11 @@ export async function middleware(req: NextRequest) {
   }
 
   // Skip auth checks for static files and API routes
-  const excludedPaths = ["/_next", "/api", "/favicon.ico", "/images", "/icons"]
+  const excludedPaths = ["/_next", "/api/auth", "/api", "/favicon.ico", "/images", "/icons"]
   const isExcludedPath = excludedPaths.some((path) => req.nextUrl.pathname.startsWith(path))
 
   if (isExcludedPath) {
-    return res
+    return NextResponse.next({ request: req})
   }
 
   // Auth logic with Supabase

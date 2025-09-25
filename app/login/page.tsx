@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
-import { signIn, signInWithGoogle } from "../actions/auth"
+import { signIn } from "next-auth/react"
 import { HamburgerMenu } from "@/components/hamburger-menu"
 
 export default function LoginPage() {
@@ -17,15 +17,28 @@ export default function LoginPage() {
   const [error, setError] = useState("")
 
   const handleSubmit = async (formData: FormData) => {
-    setIsLoading(true)
-    setError("")
+  setIsLoading(true)
+  setError("")
 
-    const result = await signIn(formData)
-    if (result?.error) {
-      setError(result.error)
-    }
-    setIsLoading(false)
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+
+  const result = await signIn("credentials", {
+    redirect: false,
+    email,
+    password,
+  })
+
+  if (result?.error) {
+    setError(result.error)
+  } else {
+    // ✅ redirect manually after login success
+    window.location.href = "/"
   }
+
+  setIsLoading(false)
+}
+
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
@@ -52,7 +65,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               className="w-full h-12 border-gray-300 hover:bg-gray-50 bg-transparent"
-              onClick={() => signInWithGoogle()}
+              onClick={() => signIn("google")}
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path
