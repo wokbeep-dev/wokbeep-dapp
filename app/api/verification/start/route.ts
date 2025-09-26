@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabaseServer } from "@/lib/supabase-server"
+import { supabase } from "@/lib/supabase"
 import { randomBytes } from "crypto"
 
 export async function POST(request: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get("user-agent") || "unknown"
 
     // Create verification session
-    const { data, error } = await supabaseServer
+    const { data, error } = await supabase
       .from("verification_sessions")
       .insert({
         user_id: userId,
