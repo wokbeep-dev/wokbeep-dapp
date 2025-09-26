@@ -5,4 +5,5 @@ dist/
 *.gz
 *.map
 .env
+.env.local
 .vercel/
