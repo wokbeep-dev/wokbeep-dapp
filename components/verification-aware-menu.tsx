@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { signOut } from "@/app/actions/auth"
-import { supabase } from "@/lib/supabase"
+import { useSupabase } from "@/lib/supabase"
 
 interface MenuItem {
   icon: React.ReactNode
@@ -43,6 +43,7 @@ const menuItems: MenuItem[] = [
 ]
 
 export function VerificationAwareMenu() {
+  const supabase = useSupabase()
   const [isOpen, setIsOpen] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [userEmail, setUserEmail] = useState("")

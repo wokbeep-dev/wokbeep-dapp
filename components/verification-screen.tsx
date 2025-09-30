@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronRight, Loader2, Mail, RefreshCw, CheckCircle } from "lucide-react"
 import { HamburgerMenu } from "./hamburger-menu"
-import { supabase } from "@/lib/supabase"
+import { useSupabase } from "@/lib/supabase"
 import { resendVerification } from "@/app/actions/auth"
 
 interface VerificationScreenProps {
@@ -13,6 +13,7 @@ interface VerificationScreenProps {
 }
 
 export function VerificationScreen({ onVerificationStart }: VerificationScreenProps) {
+  const supabase = useSupabase()
   const [isLoading, setIsLoading] = useState(false)
   const [language, setLanguage] = useState("english")
   const [step, setStep] = useState<"initial" | "email-sent" | "waiting">("initial")
