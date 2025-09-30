@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -23,6 +22,7 @@ import {
   MessageCircle,
   Mail,
 } from "lucide-react";
+import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
 
 interface MenuItem {
   icon: React.ReactNode;
@@ -43,14 +43,13 @@ const menuItems: MenuItem[] = [
 
 export function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: session, status } = useSession();
+  const user = useUser();
+  const supabase = useSupabaseClient();
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/" }); // redirect after sign out
+    await supabase.auth.signOut();
     setIsOpen(false);
   };
-
-  const isAuthenticated = status === "authenticated";
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-200">
@@ -73,7 +72,7 @@ export function HamburgerMenu() {
               </Link>
             ))}
 
-            {!isAuthenticated ? (
+            {!user ? (
               <>
                 <Link
                   href="/login"
@@ -90,10 +89,10 @@ export function HamburgerMenu() {
             ) : (
               <>
                 <span className="text-gray-700 font-medium">
-                  {session?.user?.name || session?.user?.email}
+                  {user.user_metadata?.full_name || user.email}
                 </span>
                 <Button
-                  onClick={() => signOut({ callbackUrl: "/" })}
+                  onClick={handleSignOut}
                   variant="ghost"
                   className="text-red-600 hover:text-red-700"
                 >
@@ -139,7 +138,7 @@ export function HamburgerMenu() {
                     </Link>
                   ))}
 
-                  {!isAuthenticated ? (
+                  {!user ? (
                     <>
                       <Link
                         href="/login"

@@ -2,7 +2,7 @@ import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// Simple rate limiting (use Redis in production)
+// Simple in-memory rate limiting (use Redis/Upstash in production!)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
 function getClientIP(req: NextRequest): string {
@@ -37,17 +37,11 @@ function checkRateLimit(ip: string, limit = 100, windowMs = 15 * 60 * 1000): boo
 }
 
 export async function middleware(req: NextRequest) {
-  if (req.nextUrl.pathname.startsWith("/api/auth")) {
-    return NextResponse.next()
-  }
-  // Your original IP tracking logic (enhanced)
   const ip = getClientIP(req)
   const res = NextResponse.next()
 
-  // Set your original IP header
+  // Security headers
   res.headers.set("x-real-ip", ip)
-
-  // Basic security headers
   res.headers.set("X-Frame-Options", "DENY")
   res.headers.set("X-Content-Type-Options", "nosniff")
 
@@ -62,29 +56,29 @@ export async function middleware(req: NextRequest) {
     })
   }
 
-  // Skip auth checks for static files and API routes
-  const excludedPaths = ["/_next", "/api/auth", "/api", "/favicon.ico", "/images", "/icons"]
-  const isExcludedPath = excludedPaths.some((path) => req.nextUrl.pathname.startsWith(path))
+  // Skip auth checks for static files and some routes
+  const excludedPaths = ["/_next", "/favicon.ico", "/images", "/icons"]
+  const isExcludedPath = excludedPaths.some((path) =>
+    req.nextUrl.pathname.startsWith(path),
+  )
 
   if (isExcludedPath) {
-    return NextResponse.next({ request: req})
+    return res
   }
 
-  // Auth logic with Supabase
+  // Create Supabase client & get session
   const supabase = createMiddlewareClient({ req, res })
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Public routes
+  // Public routes (accessible without login)
   const publicRoutes = [
     "/",
     "/login",
     "/signup",
     "/verify-email",
     "/verify-success",
-    "/auth/callback",
-    "/auth/auth-code-error",
     "/forgot-password",
     "/terms",
     "/privacy",
@@ -95,25 +89,28 @@ export async function middleware(req: NextRequest) {
     (route) => req.nextUrl.pathname === route || req.nextUrl.pathname.startsWith(route),
   )
 
-  // Redirect to login if no session and accessing protected route
+  // Protect private routes
   if (!session && !isPublicRoute) {
     const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("redirect", req.nextUrl.pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Redirect to verification if email not confirmed
+  // Force email verification before accessing app
   if (
     session &&
     !session.user.email_confirmed_at &&
-    !req.nextUrl.pathname.startsWith("/verify-email") &&
-    !req.nextUrl.pathname.startsWith("/auth/")
+    !req.nextUrl.pathname.startsWith("/verify-email")
   ) {
     return NextResponse.redirect(new URL("/verify-email", req.url))
   }
 
-  // Redirect verified users away from verification page
-  if (session && session.user.email_confirmed_at && req.nextUrl.pathname.startsWith("/verify-email")) {
+  // Redirect verified users away from verify page
+  if (
+    session &&
+    session.user.email_confirmed_at &&
+    req.nextUrl.pathname.startsWith("/verify-email")
+  ) {
     return NextResponse.redirect(new URL("/dashboard", req.url))
   }
 

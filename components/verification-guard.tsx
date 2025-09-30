@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { useSupabase } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 
 interface VerificationGuardProps {
@@ -11,6 +11,7 @@ interface VerificationGuardProps {
 }
 
 export function VerificationGuard({ children }: VerificationGuardProps) {
+  const supabase = useSupabase()
   const [isLoading, setIsLoading] = useState(true)
   const [isVerified, setIsVerified] = useState(false)
   const router = useRouter()
