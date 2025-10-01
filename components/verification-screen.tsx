@@ -146,7 +146,7 @@ export function VerificationScreen({ onVerificationStart }: VerificationScreenPr
           onClick={() => setStep("waiting")}
           className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-md font-medium text-base inline-flex items-center gap-2 shadow-sm transition-colors"
         >
-          I've sent the email
+          I've seen the email
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
